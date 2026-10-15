@@ -1,0 +1,10 @@
+/var/log/bdgsvc_sandik/*.log {
+    su bdgsvc_sandik bdgsvc_sandik
+    daily
+    rotate 5
+    compress
+    missingok
+    notifempty
+    size 10M
+    create 0640 bdgsvc_sandik bdgsvc_sandik
+}
