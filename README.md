@@ -13,7 +13,7 @@ BongoDev Linux Fundamentals / DevOps Practical Lab
 - Part 3 — Stress testing: cpmpleted
 - Part 4 — SSH key access: Completed
 - Part 5 — SSH hardening: Completed
-- Part 6 — Cron monitoring: Pending
+- Part 6 — Cron monitoring: Completed
 - Part 7 — Logrotate: Pending
 - Part 8 — Cleanup: Pending
 
@@ -36,3 +36,15 @@ SSH access was hardened with the following effective settings:
 - Allowed SSH user: `bgdsvc_sandik`
 
 The hardened SSH configuration was validated with `sshd -T`, and the SSH daemon was confirmed to listen on port `2222`. Key-based authentication to the service account on port `2222` completed successfully.
+
+
+## Automated Monitoring and Cleanup
+
+The service account has two scheduled cron jobs:
+
+- Resource monitoring runs every 5 minutes.
+- Old tmpfs files are cleaned daily at 2:00 AM.
+
+The monitoring script records memory usage, tmpfs usage, and service-account processes in `/var/log/bgdsvc_sandik/monitor.log`.
+
+The monitoring cron job was verified to execute automatically, and the cleanup script was also tested successfully.
