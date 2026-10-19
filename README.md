@@ -1,64 +1,121 @@
 # Linux Load Test Assignment
 
-BongoDev Linux Fundamentals / DevOps Practical Lab
+**BongoDev Linux Fundamentals / DevOps Practical Lab**
 
 ## Service Account
 
 `bgdsvc_sandik`
 
-## Progress
+## Assignment Status
 
 - Part 1 — Service user creation: Completed
-- Part 2 — tmpfs setup: Cpmpleted
-- Part 3 — Stress testing: cpmpleted
+- Part 2 — tmpfs setup: Completed
+- Part 3 — Stress testing: Completed
 - Part 4 — SSH key access: Completed
 - Part 5 — SSH hardening: Completed
 - Part 6 — Cron monitoring: Completed
 - Part 7 — Logrotate: Completed
-- Part 8 — Cleanup: Pending
+- Part 8 — Cleanup: Completed
 
-## SSH Key Access
+## Part 1 — Service Identity
 
-An ED25519 key pair was created for `bgdsvc_sandik`, and the public key was installed in the service account's `authorized_keys` file.
+The dedicated service account `bgdsvc_sandik` was created using an idempotent script. It was initially configured with `/usr/sbin/nologin` as its shell.
 
-The service account was originally created with `/usr/sbin/nologin` as required in Part 1. For the SSH access test in Part 4, its live login shell was changed to `/bin/bash` so that key-based interactive SSH access could be verified successfully.
+## Part 2 — tmpfs Storage
 
-The private SSH key is stored outside the repository and is not committed.
+A 256 MB tmpfs filesystem was mounted at:
 
+`/mnt/bgdsvc_sandik_tmp`
 
-## SSH Hardening
+The mount was owned by the service account and the configured size cap was verified.
 
-SSH access was hardened with the following effective settings:
+## Part 3 — Load Testing
 
-- Port: `2222`
-- Root login: disabled
-- Password authentication: disabled
-- Allowed SSH user: `bgdsvc_sandik`
+CPU, memory, disk, and combined load tests were performed.
 
-The hardened SSH configuration was validated with `sshd -T`, and the SSH daemon was confirmed to listen on port `2222`. Key-based authentication to the service account on port `2222` completed successfully.
+The stress script supports:
 
+- `--cpu`
+- `--mem`
+- `--disk`
+- `--all`
 
-## Automated Monitoring and Cleanup
+The disk population test used approximately 200 MB of the 256 MB tmpfs.
 
-The service account has two scheduled cron jobs:
+The CPU test used two CPU workers for 30 seconds.
 
-- Resource monitoring runs every 5 minutes.
-- Old tmpfs files are cleaned daily at 2:00 AM.
+The memory test allocated 200 MB for approximately 30 seconds.
 
-The monitoring script records memory usage, tmpfs usage, and service-account processes in `/var/log/bgdsvc_sandik/monitor.log`.
+The combined test was monitored with `free -h`, `top`, and the kernel log for OOM events. No OOM event was detected.
 
-The monitoring cron job was verified to execute automatically, and the cleanup script was also tested successfully.
+## Part 4 — SSH Key Access
 
-## Log Rotation
+An ED25519 SSH key pair was created for `bgdsvc_sandik`, and its public key was installed in the service account's `authorized_keys` file.
 
-Log rotation was configured for `/var/log/bgdsvc_sandik/*.log` with the following settings:
+The service account was originally created with `/usr/sbin/nologin`. Its live shell was changed to `/bin/bash` during the SSH access phase so interactive key-based SSH access could be tested.
 
-- Daily rotation policy
-- Keep 5 rotated logs
-- Compress rotated logs
-- Ignore missing and empty logs
-- Rotate when the log reaches 10 MB
-- Create new logs with mode `0640`
-- Owner and group: `bgdsvc_sandik`
+The private SSH key is not stored in this repository.
 
-The configuration was tested with a forced rotation. The existing log was compressed as `monitor.log.1.gz`, a new `monitor.log` was created with the expected ownership and permissions, and the monitoring script successfully continued writing to the new log.
+## Part 5 — SSH Hardening
+
+SSH was hardened and validated with the following settings:
+
+- Port `2222`
+- Root login disabled
+- Password authentication disabled
+- SSH access restricted to `bgdsvc_sandik`
+
+Key-based SSH authentication on port `2222` was tested successfully.
+
+## Part 6 — Automated Monitoring and Cleanup
+
+Two cron jobs were configured for the service account.
+
+Resource monitoring ran every 5 minutes using:
+
+`/usr/local/bin/bgdsvc_sandik_monitor.sh`
+
+Old tmpfs files were scheduled for cleanup every day at 2:00 AM using:
+
+`/usr/local/bin/bgdsvc_sandik_cleanup_old_files.sh`
+
+The monitoring cron job was verified to execute automatically.
+
+## Part 7 — Log Rotation
+
+Log rotation was configured for:
+
+`/var/log/bgdsvc_sandik/*.log`
+
+Configuration:
+
+- `daily`
+- `rotate 5`
+- `compress`
+- `missingok`
+- `notifempty`
+- `size 10M`
+- New log mode `0640`
+- Owner/group `bgdsvc_sandik:bgdsvc_sandik`
+
+A forced rotation was performed successfully. The old log was compressed and the monitoring script continued writing to the newly created log.
+
+## Part 8 — Cleanup
+
+The cleanup script removes the environment in reverse order:
+
+1. Stop service-user processes
+2. Remove cron and automation files
+3. Unmount and remove tmpfs storage
+4. Remove service logs
+5. Remove the service account
+
+The cleanup script was tested for idempotency and final verification confirmed that the service account, tmpfs mount, and service-account processes were removed.
+
+## Evidence
+
+Required screenshots are stored in the `screenshots/` directory.
+
+## Security
+
+No private SSH key, EC2 key pair, public IP address, or private IP address is intentionally stored in this repository.
