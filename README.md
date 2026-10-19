@@ -9,7 +9,7 @@ BongoDev Linux Fundamentals / DevOps Practical Lab
 ## Progress
 
 - Part 1 — Service user creation: Completed
-- Part 2 — tmpfs setup: Pending
+- Part 2 — tmpfs setup: Cpmpleted
 - Part 3 — Stress testing: Pending
 - Part 4 — SSH key access: Pending
 - Part 5 — SSH hardening: Pending
